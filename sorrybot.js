@@ -23,13 +23,13 @@ client.once('ready', () => {
 // On member join function
 client.on('guildMemberAdd', member => {
 
-    // 
+    
     const roleUnregistered = member.guild.roles.cache.get("777658740584873995");
     const channelRegister = member.guild.channels.cache.get("777658741339455530")
 
-
+    // Add unregistered role to new member
     member.roles.add(roleUnregistered);
-
+    // Send message in #register channel
     channelRegister.send(`<@${member.id}>, welcome to the :maple_leaf: **Beat Saber Canadian Discord** :maple_leaf:\n\nYou are currently quarantined and can't access the server's regular channels.\nPlease **read our rules** in <#777658741339455533> and **follow the instructions** in <#777658741088059431> to gain access to the rest of the server.`)
 
     console.log(member.displayName + " joined the server.");
@@ -40,6 +40,54 @@ client.on('guildMemberAdd', member => {
 
 // Triggers every time a message is sent.
 client.on('message', message => {
+    // Checks if message author is bot
+    if (message.author.bot) return;
+    // Checks if channel message was sent in is #birthdays
+    if (message.channel.id === "777658741583511554"){
+        // Checks if message is length 5 (MM/DD)
+        if (message.content.length === 5){
+
+            // Deserializes, parses, and applies settings.json
+            var birthdayObject = JSON.parse(fs.readFileSync("./birthdays.json"));
+
+            var i = -1;
+            // Checks all users in birthdayObject
+            for (user of birthdayObject.users) {
+                i++;
+                // If discordID in birthdayObject == message author ID, delete from birthdayObject.users
+                if (user.discordID == message.author.id) {
+                    
+                    birthdayObject.users.splice(i,1);
+                    break;
+                }
+              }
+              
+            // Create object with message author ID & birthday (message.content)
+            var personObject = {
+                "discordID": message.author.id,
+                "birthday": message.content
+              }
+            // Add personObject to end of birthdayObject
+            birthdayObject.users.push(personObject);
+            // Overwrites birthdays.json and adds birthdayObject (birthday dict)
+            const saveThis = JSON.stringify(birthdayObject);
+            fs.writeFile('./birthdays.json', saveThis, (err) => {
+                if (err) {
+                    throw err;
+                }
+                console.log(message.author.username + " saved their birthday : " + message.content);
+                message.channel.send("Your birthday has been saved.")
+            })      
+
+        }
+        // If message was wrong length (MM/DD)
+        else{
+            
+            message.channel.send("Error : you must use the format **MM/DD**. Please try again.")
+
+        }
+    }
+
 
 
     // Triggers when message "pog" and sends ChampCanada emote
@@ -51,11 +99,11 @@ client.on('message', message => {
     // Triggers is message sent in #register not from staff. Deletes message, sends warning & print.
     if (message.channel.id === "777658741339455530"){
 
+        
         // Gets guild from message
         const { guild } = message;
         // Creates member object from message author ID
         const member = guild.members.cache.get(message.author.id);
-
         // Checks if message author is SorryBot or BeatStalker, pass if it is
         if (message.author.id === "776971936370393109" || message.author.id === "521458813874864141"){
             //pass
@@ -98,6 +146,10 @@ client.on('message', message => {
 
         case "guess":
             client.commands.get("guess").execute(message, args);
+            break;
+
+        case "sabub":
+            client.commands.get("sabub").execute(message);
             break;
     }
         
