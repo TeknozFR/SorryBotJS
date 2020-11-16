@@ -1,7 +1,7 @@
 module.exports = {
     name: 'help',
     description: 'Help command',
-    async execute(message, args){
+    async execute(message){
 
         // Gets guild from message
         const { guild } = message;
