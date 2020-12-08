@@ -1,3 +1,5 @@
+const { GuildMember } = require("discord.js");
+
 module.exports = {
     name: 'roll',
     description: 'Roll command',
