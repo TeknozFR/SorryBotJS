@@ -5,5 +5,7 @@ module.exports = {
 
         message.channel.send("Pong! The bot is online.");
 
+        console.log(substr);
+
     }
 }

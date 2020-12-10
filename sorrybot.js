@@ -4,6 +4,8 @@ const fs = require ("fs");
 const { request } = require("http");
 const path = require ("path");
 const moment = require('moment');
+const getJSON = require('get-json')
+
 
 const prefix = ">";
 
@@ -11,9 +13,13 @@ const client = new Discord.Client();
 
 // Deserializes, parses, and applies settings.json
 const settingsObject = JSON.parse(fs.readFileSync("./json_files/settings.json"));
+
 // Declaring all my constants for roles, channels & etc IDs from settings.json
 const discordToken = settingsObject.other[0].token;
 const guildID = settingsObject.other[0].guildID;
+
+const youtubeAPIKey = settingsObject.other[0].apiKey;
+
 
 const channelGeneralID = settingsObject.channels[0].generalID;
 const channelRegisterID = settingsObject.channels[0].registerID;
@@ -22,11 +28,13 @@ const channelNewMembersID = settingsObject.channels[0].newMembersID;
 const channelRulesInfosID = settingsObject.channels[0].rulesInfosID;
 const channelJoinRequestsID = settingsObject.channels[0].joinRequestsID;
 const channelCMStaffID = settingsObject.channels[0].cmStaffID;
+const channelNewVideosID = settingsObject.channels[0].newVideos;
 
 const roleUnregisteredID = settingsObject.roles[0].unregisteredID;
 const roleBirthdayID = settingsObject.roles[0].birthdayID;
 const roleCanadianID = settingsObject.roles[0].canadianID;
 const roleNonCanadianID = settingsObject.roles[0].nonCanadianID;
+const roleYoutubeID = settingsObject.roles[0].youtubeID;
 
 client.commands = new Discord.Collection();
 const commandFiles = fs.readdirSync(path.join(__dirname, "commands")).filter(file => file.endsWith('.js'));
@@ -49,6 +57,7 @@ client.once('ready', () => {
     const channelJoinRequests = guild.channels.cache.get(channelJoinRequestsID);
     const channelNewMembers = guild.channels.cache.get(channelNewMembersID);
     const channelCMSTaff = guild.channels.cache.get(channelCMStaffID);
+    const channelNewVideos = guild.channels.cache.get(channelNewVideosID);
 
     const roleBirthday = guild.roles.cache.get(roleBirthdayID);
     const roleCanadian = guild.roles.cache.get(roleCanadianID);
@@ -117,7 +126,7 @@ client.once('ready', () => {
 
       }, 3600000); 
 
-      var intervalJoinRequest = setInterval (async function () {
+    var intervalJoinRequest = setInterval (async function () {
         // nbr of ms per day
         const msPerDay = 1000 * 60 * 60 * 24;
         // current date + time object
@@ -238,8 +247,50 @@ client.once('ready', () => {
 
         
 
-      }, 300000);
+    }, 300000);
 
+    // task loop every 10 mins that checks new video on BSCanada youtube channel
+    var intervalNewVideo = setInterval (function () {
+
+        getJSON(`https://www.googleapis.com/youtube/v3/search?key=${youtubeAPIKey}&channelId=UCgmd2oa2F1zNNhwyjP9N31Q&part=snippet,id&order=date&maxResults=1`)
+
+
+            .then(function(response) {
+
+                console.log("New Video task loop executed");
+
+                var youtubeAPIObject = JSON.parse(fs.readFileSync("./json_files/youtube_api.json"));
+
+                var latestVideo = youtubeAPIObject.youtube[0].latestVideoTitle;
+                
+                if (response.items[0].snippet.title != latestVideo){
+
+                    var videoDescription = response.items[0].snippet.description;
+                    var customMsgDescription = videoDescription.substring(0, videoDescription.indexOf("VR Headset")-1);
+                    var newLatestVideoDict = {"latestVideoTitle":response.items[0].snippet.title};
+
+                    channelNewVideos.send(`${customMsgDescription} :maple_leaf: <@&${roleYoutubeID}>\nCheck it out here! https://www.youtube.com/watch?v=${response.items[0].id.videoId}`);
+
+                    youtubeAPIObject.youtube.splice(0,1);
+
+                    youtubeAPIObject.youtube.push(newLatestVideoDict);
+
+                    // Overwrites youtube_api.json and adds new latestVideoTitle
+                    const saveThis = JSON.stringify(youtubeAPIObject);
+                    fs.writeFile('./json_files/youtube_api.json', saveThis, (err) => {
+                        if (err) {
+                            throw err;
+                        }
+                        console.log(`New Video on BSCanada Youtube : ${response.items[0].snippet.title}`);
+                    })
+
+                }
+            })
+            .catch(function(error) {
+                console.log(error);
+            });
+        
+    }, 600000);
 });
 // On member join function
 client.on('guildMemberAdd', member => {
