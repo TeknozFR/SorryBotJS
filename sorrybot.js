@@ -290,7 +290,7 @@ client.once('ready', () => {
                 console.log(error);
             });
         
-    }, 600000);
+    }, 900000);
 });
 // On member join function
 client.on('guildMemberAdd', member => {
