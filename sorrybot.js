@@ -92,7 +92,7 @@ client.once('ready', () => {
             for (user of birthdayObject.users) {
             
                 // If discordID in birthdayObject == message author ID, delete from birthdayObject.users
-                if (user.birthday === currentMMDD) {
+                if (user.birthday === currentMMDD && guild.member(user.discordID)) {
                     
                     let member = guild.members.cache.get(discordID);
 
@@ -158,7 +158,7 @@ client.once('ready', () => {
 
             let differenceInDays = Math.floor((currentDateUTC - requestDateUTC) / msPerDay);
 
-            if (joinRequest.claimedNationality === "Canadian" && requestReactions >= 2){
+            if (joinRequest.claimedNationality === "Canadian" && requestReactions >= 2 && guild.member(joinRequest.memberID)){
 
                 memberObject.roles.add(roleCanadian);
                 memberObject.roles.remove(roleUnregistered);
@@ -181,7 +181,7 @@ client.once('ready', () => {
                     console.log(`${memberObject.displayName} received more than 1 vote and was allowed into the server.`);
                 })
             }
-            else if (joinRequest.claimedNationality === "Non-Canadian" && requestReactions >= 4){
+            else if (joinRequest.claimedNationality === "Non-Canadian" && requestReactions >= 4 && guild.member(joinRequest.memberID)){
 
                 memberObject.roles.add(roleNonCanadian);
                 memberObject.roles.remove(roleUnregistered);
@@ -205,7 +205,7 @@ client.once('ready', () => {
                 })
 
             }
-            else if (joinRequest.claimedNationality === "Non-Canadian" && requestReactions < 4 && differenceInDays >= 1){
+            else if (joinRequest.claimedNationality === "Non-Canadian" && requestReactions < 4 && differenceInDays >= 2 && guild.member(joinRequest.memberID)){
 
                 memberObject.send("Your request to join the **Beat Saber Canadian Discord was denied**.\n\nYou can try applying again in the near future.\nYou were probably denied due to a poor reason, we are strict when it comes to accepting Non-Canadians considering it is a server made for Canadian players mainly.\n\nIf you have any questions, please message **TeknozFR#6900**.\n\n*If you received this message but have been accepted into the server, this is probably because you submitted two join requests. In that case, just ignore this message.*");
                 channelCMSTaff.send(`**${memberObject.displayName}** received **less than 3 votes in 24 hours**. They were declined, were DM'ed and the join request was deleted.`)
@@ -224,7 +224,7 @@ client.once('ready', () => {
                     console.log(`${memberObject.displayName} received less than 3 votes in 24 hours and was declined.`);
                 })
             }
-            else if (joinRequest.claimedNationality === "Canadian" && requestReactions < 2 && differenceInDays >= 3){
+            else if (joinRequest.claimedNationality === "Canadian" && requestReactions < 2 && differenceInDays >= 4 && guild.member(joinRequest.memberID)){
 
                 channelCMSTaff.send(`**${memberObject.displayName}** received **less than 1 vote in 24 hours**. They were declined and the join request was deleted.\n\nPlease do note that they were Canadian so there must have been a good reason to decline them (lying, etc).`)
 
