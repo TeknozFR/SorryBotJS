@@ -4,7 +4,7 @@ const fs = require ("fs");
 const { request } = require("http");
 const path = require ("path");
 const moment = require('moment');
-const getJSON = require('get-json')
+const getJSON = require('get-json');
 
 
 const prefix = ">";
@@ -265,24 +265,36 @@ client.once('ready', () => {
                 
                 if (response.items[0].snippet.title != latestVideo){
 
-                    var videoDescription = response.items[0].snippet.description;
-                    var customMsgDescription = videoDescription.substring(0, videoDescription.indexOf("VR Headset")-1);
-                    var newLatestVideoDict = {"latestVideoTitle":response.items[0].snippet.title};
+                    videoID = response.items[0].id.videoId;
 
-                    channelNewVideos.send(`${customMsgDescription} :maple_leaf: <@&${roleYoutubeID}>\nCheck it out here! https://www.youtube.com/watch?v=${response.items[0].id.videoId}`);
+                    getJSON(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoID}&key=${youtubeAPIKey}`)
 
-                    youtubeAPIObject.youtube.splice(0,1);
 
-                    youtubeAPIObject.youtube.push(newLatestVideoDict);
+                        .then(function(response){
+                            
+                            var videoDescription = response.items[0].snippet.description;
+                            var customMsgDescription = videoDescription.substring(0, videoDescription.indexOf("\n\n"));
+                            var newLatestVideoDict = {"latestVideoTitle":response.items[0].snippet.title};
 
-                    // Overwrites youtube_api.json and adds new latestVideoTitle
-                    const saveThis = JSON.stringify(youtubeAPIObject);
-                    fs.writeFile('./json_files/youtube_api.json', saveThis, (err) => {
-                        if (err) {
-                            throw err;
-                        }
-                        console.log(`New Video on BSCanada Youtube : ${response.items[0].snippet.title}`);
-                    })
+                            channelNewVideos.send(`${customMsgDescription} :maple_leaf: <@&${roleYoutubeID}>\nCheck it out here! https://www.youtube.com/watch?v=${videoID}`);
+
+                            youtubeAPIObject.youtube.splice(0,1);
+
+                            youtubeAPIObject.youtube.push(newLatestVideoDict);
+
+                            // Overwrites youtube_api.json and adds new latestVideoTitle
+                            const saveThis = JSON.stringify(youtubeAPIObject);
+                            fs.writeFile('./json_files/youtube_api.json', saveThis, (err) => {
+                                if (err) {
+                                    throw err;
+                                }
+                                console.log(`New Video on BSCanada Youtube : ${response.items[0].snippet.title}`);
+                            })
+                        })
+
+                        .catch(function(error){
+                            console.log(error);
+                        })
 
                 }
             })
