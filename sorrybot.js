@@ -410,7 +410,7 @@ client.on('message', message => {
 
 
     // Triggers is message sent in #register not from staff. Deletes message, sends warning & print.
-    if (message.channel.id === "777658741339455530"){
+    if (message.channel.id === channelRegisterID){
 
         
         // Gets guild from message
