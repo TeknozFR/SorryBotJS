@@ -35,6 +35,7 @@ const roleBirthdayID = settingsObject.roles[0].birthdayID;
 const roleCanadianID = settingsObject.roles[0].canadianID;
 const roleNonCanadianID = settingsObject.roles[0].nonCanadianID;
 const roleYoutubeID = settingsObject.roles[0].youtubeID;
+const roleStaffID = settingsObject.roles[0].staffID;
 
 client.commands = new Discord.Collection();
 const commandFiles = fs.readdirSync(path.join(__dirname, "commands")).filter(file => file.endsWith('.js'));
@@ -158,7 +159,27 @@ client.once('ready', () => {
 
             let differenceInDays = Math.floor((currentDateUTC - requestDateUTC) / msPerDay);
 
-            if (joinRequest.claimedNationality === "Canadian" && requestReactions >= 2 && guild.member(joinRequest.memberID)){
+            if (!guild.member(joinRequest.memberID)){
+
+                //channelCMSTaff.send(`**${memberObject.displayName}** has left the server so their join request was declined and deleted.`)
+
+                messageRequest.delete();
+
+                joinRequestsObject.declined.push(joinRequest);
+                joinRequestsObject.waiting_approval.splice(i,1);
+
+                // Overwrites birthdays.json and adds birthdayObject (birthday dict)
+                const saveThis = JSON.stringify(joinRequestsObject);
+                fs.writeFile('./json_files/join_requests.json', saveThis, (err) => {
+                    if (err) {
+                        throw err;
+                    }
+                    //console.log(`${memberObject.displayName} left the server so their application was declined and deleted`);
+                })
+
+            }
+
+            else if (joinRequest.claimedNationality === "Canadian" && requestReactions >= 2 && guild.member(joinRequest.memberID)){
 
                 memberObject.roles.add(roleCanadian);
                 memberObject.roles.remove(roleUnregistered);
@@ -261,11 +282,10 @@ client.once('ready', () => {
 
                 var youtubeAPIObject = JSON.parse(fs.readFileSync("./json_files/youtube_api.json"));
 
-                var latestVideo = youtubeAPIObject.youtube[0].latestVideoTitle;
+                var latestVideo = youtubeAPIObject.youtube[0].latestVideoID;
+                videoID = response.items[0].id.videoId;
                 
-                if (response.items[0].snippet.title != latestVideo){
-
-                    videoID = response.items[0].id.videoId;
+                if (videoID != latestVideo){
 
                     getJSON(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoID}&key=${youtubeAPIKey}`)
 
@@ -274,7 +294,7 @@ client.once('ready', () => {
                             
                             var videoDescription = response.items[0].snippet.description;
                             var customMsgDescription = videoDescription.substring(0, videoDescription.indexOf("\n\n"));
-                            var newLatestVideoDict = {"latestVideoTitle":response.items[0].snippet.title};
+                            var newLatestVideoDict = {"latestVideoID":videoID};
 
                             channelNewVideos.send(`${customMsgDescription} :maple_leaf: <@&${roleYoutubeID}>\nCheck it out here! https://www.youtube.com/watch?v=${videoID}`);
 
@@ -302,7 +322,7 @@ client.once('ready', () => {
                 console.log(error);
             });
         
-    }, 900000);
+    }, 5000);
 });
 // On member join function
 client.on('guildMemberAdd', member => {
@@ -426,7 +446,7 @@ client.on('message', message => {
 
             
             // Checks if message author has staff role, if not, execute
-            if (!member.roles.cache.get("777658740748714005")){
+            if (!member.roles.cache.get(roleStaffID)){
 
                 message.delete();
 
