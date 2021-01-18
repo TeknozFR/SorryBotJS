@@ -12,14 +12,13 @@ const prefix = ">";
 const client = new Discord.Client();
 
 // Deserializes, parses, and applies settings.json
-const settingsObject = JSON.parse(fs.readFileSync("./json_files/settings.json"));
+const settingsObject = JSON.parse(fs.readFileSync("./json_files/test_server_settings.json"));
 
 // Declaring all my constants for roles, channels & etc IDs from settings.json
 const discordToken = settingsObject.other[0].token;
 const guildID = settingsObject.other[0].guildID;
 
 const youtubeAPIKey = settingsObject.other[0].apiKey;
-
 
 const channelGeneralID = settingsObject.channels[0].generalID;
 const channelRegisterID = settingsObject.channels[0].registerID;
@@ -73,12 +72,6 @@ client.once('ready', () => {
 
         let currentHour = currentDatetime.getHours();
 
-        let currentDate = currentDatetime.getDate();
-
-        let currentMonth = currentDatetime.getMonth() + 1; // +1 because january is 0
-
-        let currentMMDD = currentMonth + "/" + currentDate;
-
         console.log("Birthday task executed")
 
         // checks if the current hour is 3-4 am, if yes, check if its someone's bday
@@ -86,22 +79,34 @@ client.once('ready', () => {
 
             console.log("Birthday task executed between 3am-4am");
 
+            let currentDD = currentDatetime.getDate();
+            let currentMM = currentDatetime.getMonth() + 1; // +1 because january is 0
+
+            if (currentDD < 10){
+                currentDD = "0" + currentDD;
+            }
+            if (currentMM < 10){
+                currentMM = "0" + currentMM;
+            }
+
+            let currentMMDD = currentMM + "/" + currentDD;
+
             // Deserializes, parses, and applies birthdays.json
             var birthdayObject = JSON.parse(fs.readFileSync("./json_files/birthdays.json"));
 
             // Checks all users in birthdayObject
             for (user of birthdayObject.users) {
-            
+
                 // If discordID in birthdayObject == message author ID, delete from birthdayObject.users
                 if (user.birthday === currentMMDD && guild.member(user.discordID)) {
                     
-                    let member = guild.members.cache.get(discordID);
+                    let member = guild.members.cache.get(user.discordID);
 
-                    channelGeneral.send(`Happy birthday to <@${discordID}>!!!:partying_face: We all hope you have a beautiful day! :smile:`);
+                    channelGeneral.send(`Happy birthday to <@${user.discordID}> ! :partying_face: We all hope you have a beautiful day! :smile:`);
 
-                    console.log(`It's ${member.nickname}'s birthday!`);
+                    console.log(`It's ${member.displayName}'s birthday!`);
 
-                    if (!member.roles.cache.get("777658740731019285")){
+                    if (!member.roles.cache.get(roleBirthdayID)){
 
                         member.roles.add(roleBirthday);
                     }
@@ -283,11 +288,13 @@ client.once('ready', () => {
                 var youtubeAPIObject = JSON.parse(fs.readFileSync("./json_files/youtube_api.json"));
 
                 var latestVideo = youtubeAPIObject.youtube[0].latestVideoID;
-                videoID = response.items[0].id.videoId;
+                var videoID = response.items[0].id.videoId;
                 
                 if (videoID != latestVideo){
 
-                    getJSON(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoID}&key=${youtubeAPIKey}`)
+                    if (!youtubeAPIObject.previous_videos.includes(videoID)){
+                        
+                        getJSON(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoID}&key=${youtubeAPIKey}`)
 
 
                         .then(function(response){
@@ -301,6 +308,7 @@ client.once('ready', () => {
                             youtubeAPIObject.youtube.splice(0,1);
 
                             youtubeAPIObject.youtube.push(newLatestVideoDict);
+                            youtubeAPIObject.previous_videos.push(videoID);
 
                             // Overwrites youtube_api.json and adds new latestVideoTitle
                             const saveThis = JSON.stringify(youtubeAPIObject);
@@ -316,13 +324,15 @@ client.once('ready', () => {
                             console.log(error);
                         })
 
+                    }
+
                 }
             })
             .catch(function(error) {
                 console.log(error);
             });
         
-    }, 5000);
+    }, 900000);
 });
 // On member join function
 client.on('guildMemberAdd', member => {
@@ -334,7 +344,7 @@ client.on('guildMemberAdd', member => {
     // Add unregistered role to new member
     member.roles.add(roleUnregistered);
     // Send message in #register channel
-    channelRegister.send(`<@${member.id}>, welcome to the :maple_leaf: **Beat Saber Canadian Discord** :maple_leaf:\n\nYou are currently quarantined and can't access the server's regular channels.\nPlease **read our rules** in <#777658741339455533> and **follow the instructions** in <#777658741088059431> to gain access to the rest of the server.`);
+    channelRegister.send(`<@${member.id}>, welcome to the :maple_leaf: **Beat Saber Canadian Discord** :maple_leaf:\n\nYou are currently quarantined and can't access the server's regular channels.\nPlease **read our rules** in <#${channelRulesInfosID}> and **follow the instructions** in <#764680632450154507> to gain access to the rest of the server.`);
 
     console.log(member.displayName + " joined the server.");
 
