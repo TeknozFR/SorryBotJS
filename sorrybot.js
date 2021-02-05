@@ -12,7 +12,7 @@ const prefix = ">";
 const client = new Discord.Client();
 
 // Deserializes, parses, and applies settings.json
-const settingsObject = JSON.parse(fs.readFileSync("./json_files/test_server_settings.json"));
+const settingsObject = JSON.parse(fs.readFileSync("./json_files/settings.json"));
 
 // Declaring all my constants for roles, channels & etc IDs from settings.json
 const discordToken = settingsObject.other[0].token;
@@ -155,7 +155,8 @@ client.once('ready', () => {
 
             let messageRequest = await channelJoinRequests.messages.fetch(joinRequest.messageID);
             
-            let requestReactions = messageRequest.reactions.resolve("✅").count;
+            let requestReactionsApprove = messageRequest.reactions.resolve("✅").count;
+            let requestReactionsDecline = messageRequest.reactions.resolve("⛔").count;
 
             let requestDateTime = new Date(JSON.parse(joinRequest.date));
 
@@ -184,13 +185,13 @@ client.once('ready', () => {
 
             }
 
-            else if (joinRequest.claimedNationality === "Canadian" && requestReactions >= 2 && guild.member(joinRequest.memberID)){
+            else if (joinRequest.claimedNationality === "Canadian" && requestReactionsApprove >= 2 && guild.member(joinRequest.memberID)){
 
                 memberObject.roles.add(roleCanadian);
                 memberObject.roles.remove(roleUnregistered);
 
                 channelGeneral.send(`Welcome <@${memberObject.id}>!\n\nWe recommend that you visit the 'Ayana self-assignable role' section of <#${channelRulesInfosID}>. You will be able to assign yourself which headset you use, what province you're from, etc.\n\nEnjoy the server :smile:`);
-                channelCMSTaff.send(`**${memberObject.displayName}** received **more than 1 vote**. They left quarantine and were assigned the Canadian role. The join request was deleted.`);
+                channelCMSTaff.send(`**${memberObject.displayName}** received **more than 1 'yes' vote**. They left quarantine and were assigned the Canadian role. The join request was deleted.`);
                 channelNewMembers.send(`**${memberObject.displayName}** just joined the server!`);
 
                 messageRequest.delete();
@@ -204,16 +205,16 @@ client.once('ready', () => {
                     if (err) {
                         throw err;
                     }
-                    console.log(`${memberObject.displayName} received more than 1 vote and was allowed into the server.`);
+                    console.log(`${memberObject.displayName} received more than 1 'yes' vote and was allowed into the server.`);
                 })
             }
-            else if (joinRequest.claimedNationality === "Non-Canadian" && requestReactions >= 4 && guild.member(joinRequest.memberID)){
+            else if (joinRequest.claimedNationality === "Non-Canadian" && requestReactionsApprove >= 4 && guild.member(joinRequest.memberID)){
 
                 memberObject.roles.add(roleNonCanadian);
                 memberObject.roles.remove(roleUnregistered);
 
                 channelGeneral.send(`Welcome <@${memberObject.id}>!\n\nWe recommend that you visit the 'Ayana self-assignable role' section of <#${channelRulesInfosID}>. You will be able to assign yourself which headset you use, which grip you use, etc.\n\nEnjoy the server :smile:`);
-                channelCMSTaff.send(`**${memberObject.displayName}** received **more than 3 votes**. They left quarantine and were assigned the Non-Canadian role. The join request was deleted.`);
+                channelCMSTaff.send(`**${memberObject.displayName}** received **more than 3 'yes' votes**. They left quarantine and were assigned the Non-Canadian role. The join request was deleted.`);
                 channelNewMembers.send(`**${memberObject.displayName}** just joined the server!`);
 
                 messageRequest.delete();
@@ -227,14 +228,14 @@ client.once('ready', () => {
                     if (err) {
                         throw err;
                     }
-                    console.log(`${memberObject.displayName} received more than 3 votes and was allowed into the server.`);
+                    console.log(`${memberObject.displayName} received more than 3 'yes' votes and was allowed into the server.`);
                 })
 
             }
-            else if (joinRequest.claimedNationality === "Non-Canadian" && requestReactions < 4 && differenceInDays >= 2 && guild.member(joinRequest.memberID)){
+            else if (joinRequest.claimedNationality === "Non-Canadian" && requestReactionsApprove < 4 && differenceInDays >= 2 && guild.member(joinRequest.memberID)){
 
-                memberObject.send("Your request to join the **Beat Saber Canadian Discord was denied**.\n\nYou can try applying again in the near future.\nYou were probably denied due to a poor reason, we are strict when it comes to accepting Non-Canadians considering it is a server made for Canadian players mainly.\n\nIf you have any questions, please message **TeknozFR#6900**.\n\n*If you received this message but have been accepted into the server, this is probably because you submitted two join requests. In that case, just ignore this message.*");
-                channelCMSTaff.send(`**${memberObject.displayName}** received **less than 3 votes in 24 hours**. They were declined, were DM'ed and the join request was deleted.`)
+                memberObject.send("Your request to join the **Beat Saber Canadian Discord was denied**.\n\nYou can try applying again in the near future.\nYou were probably denied due to a poor reason, we are strict when it comes to accepting Non-Canadians considering it is a server made for Canadian players mainly.\n\nIf you have any questions, please message **teknoz#6900**.\n\n*If you received this message but have been accepted into the server, this is probably because you submitted two join requests. In that case, just ignore this message.*");
+                channelCMSTaff.send(`**${memberObject.displayName}** received **less than 3 'yes' votes in 48+ hours**. They were declined, were DM'ed and the join request was deleted.`)
 
                 messageRequest.delete();
 
@@ -247,12 +248,12 @@ client.once('ready', () => {
                     if (err) {
                         throw err;
                     }
-                    console.log(`${memberObject.displayName} received less than 3 votes in 24 hours and was declined.`);
+                    console.log(`${memberObject.displayName} received less than 3 'yes' votes in 24 hours and was declined.`);
                 })
             }
-            else if (joinRequest.claimedNationality === "Canadian" && requestReactions < 2 && differenceInDays >= 4 && guild.member(joinRequest.memberID)){
+            else if (joinRequest.claimedNationality === "Canadian" && requestReactionsApprove < 2 && differenceInDays >= 4 && guild.member(joinRequest.memberID)){
 
-                channelCMSTaff.send(`**${memberObject.displayName}** received **less than 1 vote in 24 hours**. They were declined and the join request was deleted.\n\nPlease do note that they were Canadian so there must have been a good reason to decline them (lying, etc).`)
+                channelCMSTaff.send(`**${memberObject.displayName}** received **less than 1 'yes' vote in 96+ hours**. They were declined and the join request was deleted.\n\nPlease do note that they were Canadian so there must have been a good reason to decline them (lying, etc).`)
 
                 messageRequest.delete();
 
@@ -265,7 +266,44 @@ client.once('ready', () => {
                     if (err) {
                         throw err;
                     }
-                    console.log(`${memberObject.displayName} received less than 1 vote in 24 hours and was declined.`);
+                    console.log(`${memberObject.displayName} received less than 1 'yes' vote in 24 hours and was declined.`);
+                })
+            }
+            else if (joinRequest.claimedNationality === "Non-Canadian" && requestReactionsDecline >= 4 && guild.member(joinRequest.memberID)){
+
+                memberObject.send("Your request to join the **Beat Saber Canadian Discord was denied**.\n\nYou can try applying again in the near future.\nYou were probably denied due to a poor reason, we are strict when it comes to accepting Non-Canadians considering it is a server made for Canadian players mainly.\n\nIf you have any questions, please message **teknoz#6900**.\n\n*If you received this message but have been accepted into the server, this is probably because you submitted two join requests. In that case, just ignore this message.*");
+                channelCMSTaff.send(`**${memberObject.displayName}** received **3 or more 'no' votes**. They were declined, were DM'ed and the join request was deleted.`)
+
+                messageRequest.delete();
+
+                joinRequestsObject.declined.push(joinRequest);
+                joinRequestsObject.waiting_approval.splice(i,1);
+
+                // Overwrites birthdays.json and adds birthdayObject (birthday dict)
+                const saveThis = JSON.stringify(joinRequestsObject);
+                fs.writeFile('./json_files/join_requests.json', saveThis, (err) => {
+                    if (err) {
+                        throw err;
+                    }
+                    console.log(`${memberObject.displayName} received 3 or more 'no' votes and was declined.`);
+                })
+            }
+            else if (joinRequest.claimedNationality === "Canadian" && requestReactionsDecline >= 2 && guild.member(joinRequest.memberID)){
+
+                channelCMSTaff.send(`**${memberObject.displayName}** received **1 or more 'no' votes**. They were declined and the join request was deleted.\n\nPlease do note that they were Canadian so there must have been a good reason to decline them (lying, etc).`)
+
+                messageRequest.delete();
+
+                joinRequestsObject.declined.push(joinRequest);
+                joinRequestsObject.waiting_approval.splice(i,1);
+
+                // Overwrites birthdays.json and adds birthdayObject (birthday dict)
+                const saveThis = JSON.stringify(joinRequestsObject);
+                fs.writeFile('./json_files/join_requests.json', saveThis, (err) => {
+                    if (err) {
+                        throw err;
+                    }
+                    console.log(`${memberObject.displayName} received 1 or more 'no' votes and was declined.`);
                 })
             }
         }
@@ -335,21 +373,23 @@ client.once('ready', () => {
     }, 900000);
 });
 // On member join function
-client.on('guildMemberAdd', member => {
+client.on('guildMemberAdd', (member) => {
 
-    
-    const roleUnregistered = member.guild.roles.cache.get(roleUnregisteredID);
-    const channelRegister = member.guild.channels.cache.get(channelRegisterID);
+    guildBSCD = client.guilds.get(guildID)
 
-    // Add unregistered role to new member
-    member.roles.add(roleUnregistered);
-    // Send message in #register channel
-    channelRegister.send(`<@${member.id}>, welcome to the :maple_leaf: **Beat Saber Canadian Discord** :maple_leaf:\n\nYou are currently quarantined and can't access the server's regular channels.\nPlease **read our rules** in <#${channelRulesInfosID}> and **follow the instructions** in <#764680632450154507> to gain access to the rest of the server.`);
+    if (guildBSCD.member(member.id)){
 
-    console.log(member.displayName + " joined the server.");
+        const roleUnregistered = guildBSCD.roles.cache.get(roleUnregisteredID);
+        const channelRegister = client.channels.cache.get(channelRegisterID);
 
+        // Add unregistered role to new member
+        member.roles.add(roleUnregistered);
+        // Send message in #register channel
+        channelRegister.send(`<@${member.id}>, welcome to the :maple_leaf: **Beat Saber Canadian Discord** :maple_leaf:\n\nYou are currently quarantined and can't access the server's regular channels.\nPlease **read our rules** in <#${channelRulesInfosID}> and **follow the instructions** in <#764680632450154507> to gain access to the rest of the server.`);
 
+        console.log(member.displayName + " joined the server.");
 
+    }
 })    
 
 // Triggers every time a message is sent.
@@ -445,6 +485,8 @@ client.on('message', message => {
         
         // Gets guild from message
         const { guild } = message;
+
+        const channelCMSTaff = guild.channels.cache.get(channelCMStaffID);
         // Creates member object from message author ID
         const member = guild.members.cache.get(message.author.id);
         // Checks if message author is SorryBot or BeatStalker, pass if it is
@@ -461,6 +503,7 @@ client.on('message', message => {
                 message.delete();
 
                 message.channel.send("You are only allowed to use commands in this channel (>register & >claim). If you wish to contact a staff member, please DM them.");
+                channelCMSTaff.send(message.author.username + " sent '" + message.content + "' in <#" + channelRegisterID + "> and it was deleted.");
 
                 console.log(message.author.username + " sent '" + message.content + "' in #register and it was deleted.");
             }

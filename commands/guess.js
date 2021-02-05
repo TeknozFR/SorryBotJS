@@ -4,9 +4,9 @@ module.exports = {
     execute(message, args){
 
         // Rolls random number between 1 & 100
-        let randomNumber = Math.floor(Math.random() * 101) + 1;
+        let randomNumber = Math.floor(Math.random() * 100) + 1;
 
-        if (randomNumber === args){
+        if (randomNumber == args){
             // Print + send number & message author
             message.channel.send(`**${message.author}** rolled **${randomNumber}**.\nCongratulations, you rolled the right number! :partying_face:`);
             console.log(`${message.author.username} rolled ${randomNumber} and won`);

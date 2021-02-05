@@ -9,7 +9,8 @@ module.exports = {
         const member = guild.members.cache.get(message.author.id);
         // Creates role object from ID
         //var roleUnregistered = message.guild.roles.cache.find(role => role.id == "764679965232463882");
-        if (!member.roles.cache.get("764679965232463882")) {
+
+        if (!member.roles.cache.get("764679965232463882") || guild.id === "736827675003584582") {
 
             await message.channel.send("DM sent.");
             message.author.send("**Commands**\n```>roll -> Rolls an integer between 1 and 100.\n>guess <number> -> Rolls an integer between 1 and 100. Try to guess the right <number>!\n```");
